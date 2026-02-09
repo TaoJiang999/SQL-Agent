@@ -1,10 +1,10 @@
 """
-SQL Generator - SQL生成/翻译/修复节点
+SQL Generator - SQL Generation/Translation/Debug Node with RAG Enhancement
 
-负责：
-- text_to_sql: 根据schema和用户查询生成SQL
-- sql_to_text: 解释SQL语句含义
-- debug: 根据错误信息修复SQL
+Responsibilities:
+- text_to_sql: Generate SQL from schema and user query with RAG examples
+- sql_to_text: Explain SQL statement meaning
+- debug: Fix SQL based on error messages
 """
 
 from typing import Any
@@ -14,128 +14,129 @@ from src.config.llm import get_llm
 from src.agents.state import SQLAgentState
 
 
-# Text-to-SQL 提示词
-TEXT_TO_SQL_PROMPT = """你是一个专业的SQL生成专家。根据用户需求和数据库schema生成正确的MySQL SQL语句。
+# Text-to-SQL prompt with RAG examples
+TEXT_TO_SQL_PROMPT = """You are a professional SQL expert. Generate correct MySQL SQL statements based on user requirements and database schema.
 
-## 数据库Schema
+## Database Schema
 
 {schema}
 
-## 用户需求
+{rag_examples}
+
+## User Request
 
 {user_query}
 
-## 要求
+## Requirements
 
-1. 只生成SELECT查询，不要生成INSERT/UPDATE/DELETE
-2. 使用正确的表名和字段名
-3. 考虑JOIN关系和外键约束
-4. 添加适当的WHERE条件和排序
-5. 只返回SQL语句，不要其他解释
+1. Only generate SELECT queries, no INSERT/UPDATE/DELETE
+2. Use correct table and column names
+3. Consider JOIN relationships and foreign key constraints
+4. Add appropriate WHERE conditions and ORDER BY
+5. Return ONLY the SQL statement, no other explanation
 
-## SQL语句
+## SQL Statement
 """
 
-# SQL-to-Text 提示词
-SQL_TO_TEXT_PROMPT = """你是一个SQL解释专家。用通俗易懂的中文解释这个SQL语句的作用。
+# SQL-to-Text prompt
+SQL_TO_TEXT_PROMPT = """You are a SQL explanation expert. Explain this SQL statement in simple terms.
 
-## 数据库Schema
+## Database Schema
 
 {schema}
 
-## SQL语句
+## SQL Statement
 
 {sql}
 
-## 解释要求
+## Explanation Requirements
 
-1. 说明查询的目的
-2. 解释涉及的表和字段
-3. 说明筛选条件和排序
-4. 用业务语言描述结果
+1. State the purpose of the query
+2. Explain the tables and columns involved
+3. Describe filter conditions and sorting
+4. Use business language to describe results
 
-## 解释
+Please respond in the same language as the user's query.
+
+## Explanation
 """
 
-# Debug 提示词
-DEBUG_SQL_PROMPT = """你是一个SQL调试专家。根据错误信息修复SQL语句。
+# Debug prompt
+DEBUG_SQL_PROMPT = """You are a SQL debugging expert. Fix the SQL statement based on the error message.
 
-## 数据库Schema
+## Database Schema
 
 {schema}
 
-## 原始SQL
+## Original SQL
 
 {sql}
 
-## 错误信息
+## Error Message
 
 {error}
 
-## 修复要求
+## Fix Requirements
 
-1. 分析错误原因
-2. 修复SQL语句
-3. 只返回修复后的SQL语句
+1. Analyze the error cause
+2. Fix the SQL statement
+3. Return ONLY the fixed SQL statement
 
-## 修复后的SQL
+## Fixed SQL
 """
 
 
 async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
     """
-    SQL生成节点
+    SQL generation node with RAG enhancement
     
-    根据意图类型执行不同的生成任务
+    Executes different generation tasks based on intent type
     
     Args:
-        state: 当前状态
+        state: Current state
         
     Returns:
-        更新后的状态
+        Updated state
     """
     llm = get_llm()
     intent = state.get("intent", "unknown")
     user_query = state.get("user_query", "")
     schema_info = state.get("schema_info", {})
     formatted_schema = schema_info.get("formatted", "") if schema_info else ""
+    relevant_tables = state.get("relevant_tables", [])
     
-    # 获取已有的SQL（用于debug模式）
+    # Get existing SQL (for debug mode)
     existing_sql = state.get("generated_sql", "")
     execution_error = state.get("execution_error", "")
     retry_count = state.get("retry_count", 0)
     
     try:
         if intent == "text_to_sql":
-            # 自然语言转SQL
+            # Get RAG examples
+            rag_examples_text = await get_rag_examples(user_query, relevant_tables)
+            
+            # Natural language to SQL
             prompt = TEXT_TO_SQL_PROMPT.format(
                 schema=formatted_schema,
+                rag_examples=rag_examples_text,
                 user_query=user_query
             )
             response = await llm.ainvoke([HumanMessage(content=prompt)])
             generated_sql = response.content.strip()
             
-            # 清理SQL（移除markdown代码块标记）
-            if generated_sql.startswith("```"):
-                lines = generated_sql.split("\n")
-                generated_sql = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+            # Clean SQL (remove markdown code block markers)
+            generated_sql = clean_sql(generated_sql)
             
             return {
                 **state,
                 "generated_sql": generated_sql.strip(),
                 "current_agent": "sql_generator",
-                "messages": [
-                    *state.get("messages", []),
-                    AIMessage(content=f"[SQL生成] 已生成SQL查询")
-                ]
             }
             
         elif intent == "sql_to_text":
-            # SQL转自然语言
-            # 从用户查询中提取SQL
+            # SQL to natural language
             sql_to_explain = user_query
             if "SELECT" in user_query.upper():
-                # 尝试提取SQL部分
                 import re
                 match = re.search(r'(SELECT.+?)(?:$|\n\n)', user_query, re.IGNORECASE | re.DOTALL)
                 if match:
@@ -152,16 +153,12 @@ async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
                 "generated_sql": sql_to_explain,
                 "sql_explanation": response.content.strip(),
                 "current_agent": "sql_generator",
-                "messages": [
-                    *state.get("messages", []),
-                    AIMessage(content=f"[SQL解释] {response.content.strip()}")
-                ]
             }
             
         elif intent == "debug" or execution_error:
-            # 调试/修复模式
+            # Debug/fix mode
             sql_to_fix = existing_sql or user_query
-            error_msg = execution_error or "未知错误"
+            error_msg = execution_error or "Unknown error"
             
             prompt = DEBUG_SQL_PROMPT.format(
                 schema=formatted_schema,
@@ -169,35 +166,80 @@ async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
                 error=error_msg
             )
             response = await llm.ainvoke([HumanMessage(content=prompt)])
-            fixed_sql = response.content.strip()
-            
-            # 清理SQL
-            if fixed_sql.startswith("```"):
-                lines = fixed_sql.split("\n")
-                fixed_sql = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+            fixed_sql = clean_sql(response.content.strip())
             
             return {
                 **state,
                 "generated_sql": fixed_sql.strip(),
-                "execution_error": None,  # 清除错误，准备重试
+                "execution_error": None,
                 "retry_count": retry_count + 1,
                 "current_agent": "sql_generator",
-                "messages": [
-                    *state.get("messages", []),
-                    AIMessage(content=f"[SQL修复] 第{retry_count + 1}次修复尝试")
-                ]
             }
             
         else:
             return {
                 **state,
                 "current_agent": "sql_generator",
-                "error": f"未知意图类型: {intent}"
+                "error": f"Unknown intent type: {intent}"
             }
             
     except Exception as e:
         return {
             **state,
             "current_agent": "sql_generator",
-            "error": f"SQL生成失败: {str(e)}"
+            "error": f"SQL generation failed: {str(e)}"
         }
+
+
+async def get_rag_examples(
+    query: str,
+    relevant_tables: list[str],
+    top_k: int = 3
+) -> str:
+    """
+    Retrieve similar SQL examples using RAG
+    
+    Args:
+        query: User's natural language query
+        relevant_tables: Tables identified by schema retriever
+        top_k: Number of examples to retrieve
+        
+    Returns:
+        Formatted examples text for prompt
+    """
+    try:
+        from src.rag.sql_retriever import get_sql_retriever
+        
+        retriever = await get_sql_retriever()
+        
+        if retriever.count == 0:
+            return ""
+        
+        examples = await retriever.retrieve(
+            query=query,
+            relevant_tables=relevant_tables,
+            top_k=top_k
+        )
+        
+        if not examples:
+            return ""
+        
+        return retriever.format_for_prompt(examples)
+        
+    except Exception as e:
+        # RAG is optional, don't fail if unavailable
+        print(f"RAG retrieval failed: {e}")
+        return ""
+
+
+def clean_sql(sql: str) -> str:
+    """Clean SQL by removing markdown code block markers"""
+    if sql.startswith("```"):
+        lines = sql.split("\n")
+        # Remove first line (```sql or ```)
+        lines = lines[1:]
+        # Remove last line if it's just ```
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        sql = "\n".join(lines)
+    return sql.strip()
