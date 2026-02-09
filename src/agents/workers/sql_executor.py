@@ -41,6 +41,7 @@ class SQLExecutor:
     
     async def execute_sql(self, sql: str, timeout: int = 30) -> dict[str, Any]:
         """Execute SQL statement"""
+        print(f"[sql_executor] Executing SQL: {sql[:200]}..." if len(sql) > 200 else f"[sql_executor] Executing SQL: {sql}")
         pool = await self.get_pool()
         
         try:
@@ -88,6 +89,7 @@ class SQLExecutor:
     
     async def validate_sql(self, sql: str) -> dict[str, Any]:
         """Validate SQL syntax using EXPLAIN"""
+        print(f"[sql_executor] Validating SQL...")
         if not sql.strip().upper().startswith("SELECT"):
             return {
                 "valid": False,
@@ -201,6 +203,7 @@ async def sql_executor_node(state: SQLAgentState) -> SQLAgentState:
     # Validate SQL
     validation = await executor.validate_sql(generated_sql)
     if not validation.get("valid", False):
+        print(f"[sql_executor] Validation failed: {validation.get('error')}")
         return {
             **state,
             "current_agent": "sql_executor",
@@ -212,6 +215,7 @@ async def sql_executor_node(state: SQLAgentState) -> SQLAgentState:
     result = await executor.execute_sql(generated_sql)
     
     if result.get("success", False):
+        print(f"[sql_executor] Execution SUCCESS: {result.get('row_count', 0)} rows returned")
         data = result.get("data", [])
         row_count = result.get("row_count", 0)
         columns = result.get("columns", [])
@@ -245,6 +249,7 @@ async def sql_executor_node(state: SQLAgentState) -> SQLAgentState:
         }
     else:
         error_msg = result.get("error", "Unknown error")
+        print(f"[sql_executor] Execution FAILED: {error_msg}")
         return {
             **state,
             "current_agent": "sql_executor",

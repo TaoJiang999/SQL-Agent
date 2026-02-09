@@ -132,7 +132,7 @@ async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
                     "error": error_msg,
                     "messages": [
                         *messages,
-                        AIMessage(content=f"抱歉，SQL生成失败。尝试了{retry_count}次仍未成功。\n\n**最后的错误:** {execution_error}")
+                        AIMessage(content=f"抱歉，SQL生成失败。尝试了{retry_count}次仍未成功。\n\n**最后生成的SQL:**\n```sql\n{existing_sql}\n```\n\n**错误信息:** {execution_error}")
                     ]
                 }
             
@@ -145,7 +145,9 @@ async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
                 error=execution_error
             )
             response = await llm.ainvoke([HumanMessage(content=prompt)])
+            print(f"[sql_generator] LLM raw response: {response.content[:500]}")
             fixed_sql = clean_sql(response.content.strip())
+            print(f"[sql_generator] Fixed SQL (attempt {retry_count + 1}): {fixed_sql}")
             
             return {
                 **state,
@@ -166,10 +168,12 @@ async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
                 user_query=user_query
             )
             response = await llm.ainvoke([HumanMessage(content=prompt)])
+            print(f"[sql_generator] LLM raw response: {response.content[:500]}")
             generated_sql = response.content.strip()
             
             # Clean SQL (remove markdown code block markers)
             generated_sql = clean_sql(generated_sql)
+            print(f"[sql_generator] Generated SQL: {generated_sql}")
             
             return {
                 **state,
