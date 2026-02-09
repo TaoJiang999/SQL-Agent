@@ -231,7 +231,8 @@ async def sql_executor_node(state: SQLAgentState) -> SQLAgentState:
         ]
         response_message = "\n".join(response_parts)
         
-        return {
+        # Build new state
+        new_state = {
             **state,
             "current_agent": "sql_executor",
             "execution_result": {
@@ -247,6 +248,17 @@ async def sql_executor_node(state: SQLAgentState) -> SQLAgentState:
                 AIMessage(content=response_message)
             ]
         }
+        
+        # Capture successful SQL to RAG (async, non-blocking)
+        try:
+            from src.rag.feedback_loop import capture_success
+            captured = await capture_success(new_state)
+            if captured:
+                print("[sql_executor] SQL captured to RAG knowledge base")
+        except Exception as e:
+            print(f"[sql_executor] Failed to capture SQL to RAG: {e}")
+        
+        return new_state
     else:
         error_msg = result.get("error", "Unknown error")
         print(f"[sql_executor] Execution FAILED: {error_msg}")
