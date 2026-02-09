@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     # 数据库配置
     database_url: Optional[str] = None
     
+    # 沙盒数据库配置 (MySQL)
+    sandbox_db_host: str = "localhost"
+    sandbox_db_port: int = 3307
+    sandbox_db_user: str = "sandbox_user"
+    sandbox_db_password: str = "sandbox_password"
+    sandbox_db_name: str = "ecommerce"
+    
     # 日志配置
     log_level: str = "INFO"
     
@@ -34,6 +41,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra fields from .env
 
 
 @lru_cache()

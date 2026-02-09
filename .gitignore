@@ -57,3 +57,5 @@ htmlcov/
 .ipynb_checkpoints/
 
 .agent/
+.env
+.langgraph_api/

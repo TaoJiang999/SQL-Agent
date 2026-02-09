@@ -4,9 +4,13 @@ Agent 状态定义模块
 定义所有 Agent 共享的状态结构
 """
 
-from typing import TypedDict, Annotated, Sequence, Any, Optional
+from typing import TypedDict, Annotated, Sequence, Any, Optional, Literal
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
+
+
+# Intent Type
+IntentType = Literal["text_to_sql", "sql_to_text", "debug", "chat", "unknown"]
 
 
 class AgentState(TypedDict):
@@ -27,6 +31,36 @@ class AgentState(TypedDict):
     error: Optional[str]
 
 
+class SQLAgentState(AgentState):
+    """
+    SQL Agent 专用状态
+    
+    Attributes:
+        intent: 识别的用户意图类型
+        intent_confidence: 意图识别置信度
+        user_query: 用户原始查询
+        schema_info: 数据库 schema 信息
+        relevant_tables: 相关表列表
+        generated_sql: 生成的 SQL 语句
+        sql_explanation: SQL 解释（用于 sql_to_text）
+        execution_result: SQL 执行结果
+        execution_error: 执行错误信息
+        retry_count: 重试次数
+        max_retries: 最大重试次数
+    """
+    intent: Optional[IntentType]
+    intent_confidence: Optional[float]
+    user_query: Optional[str]
+    schema_info: Optional[dict[str, Any]]
+    relevant_tables: Optional[list[str]]
+    generated_sql: Optional[str]
+    sql_explanation: Optional[str]
+    execution_result: Optional[dict[str, Any]]
+    execution_error: Optional[str]
+    retry_count: int
+    max_retries: int
+
+
 class SupervisorState(AgentState):
     """
     Supervisor 专用状态
@@ -36,3 +70,4 @@ class SupervisorState(AgentState):
     available_workers: list[str]  # 可用的 worker agent 列表
     task_plan: Optional[list[dict]]  # 任务计划
     completed_tasks: list[str]  # 已完成的任务列表
+
