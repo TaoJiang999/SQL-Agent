@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # 日志配置
     log_level: str = "INFO"
     
+    # SQL Agent 配置
+    sql_max_retries: int = 3  # SQL执行失败最大重试次数
+    
     # 调试模式
     debug: bool = False
     

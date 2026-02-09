@@ -11,11 +11,12 @@ from typing import Any
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from src.config.llm import get_llm
+from src.config.settings import settings
 from src.agents.state import SQLAgentState
 
 
-# Configuration
-MAX_RETRY_COUNT = 3  # Maximum SQL fix attempts
+# Configuration - read from settings (can be configured in .env)
+MAX_RETRY_COUNT = settings.sql_max_retries
 
 
 # Text-to-SQL prompt with RAG examples
