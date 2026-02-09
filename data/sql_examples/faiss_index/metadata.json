@@ -1,0 +1,637 @@
+{
+  "documents": [
+    {
+      "natural_query": "查询所有用户信息",
+      "sql": "SELECT * FROM users",
+      "tables": [
+        "users"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "basic"
+      ],
+      "_id": "doc_0"
+    },
+    {
+      "natural_query": "查询价格大于100的商品名称和价格",
+      "sql": "SELECT name, price FROM products WHERE price > 100",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "where",
+        "comparison"
+      ],
+      "_id": "doc_1"
+    },
+    {
+      "natural_query": "统计每个分类的商品数量",
+      "sql": "SELECT c.name, COUNT(p.id) as product_count FROM categories c LEFT JOIN products p ON c.id = p.category_id GROUP BY c.id",
+      "tables": [
+        "categories",
+        "products"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "join",
+        "group_by",
+        "count"
+      ],
+      "_id": "doc_2"
+    },
+    {
+      "natural_query": "查询销量最高的10个商品",
+      "sql": "SELECT p.name, SUM(oi.quantity) as total_sold FROM products p JOIN order_items oi ON p.id = oi.product_id GROUP BY p.id ORDER BY total_sold DESC LIMIT 10",
+      "tables": [
+        "products",
+        "order_items"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "join",
+        "group_by",
+        "order_by",
+        "limit",
+        "sum"
+      ],
+      "_id": "doc_3"
+    },
+    {
+      "natural_query": "查询每个用户的订单总金额",
+      "sql": "SELECT u.username, SUM(o.total_amount) as total_spent FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY total_spent DESC",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "join",
+        "group_by",
+        "order_by",
+        "sum"
+      ],
+      "_id": "doc_4"
+    },
+    {
+      "natural_query": "查询没有下过订单的用户",
+      "sql": "SELECT * FROM users WHERE id NOT IN (SELECT DISTINCT user_id FROM orders)",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "subquery",
+        "not_in"
+      ],
+      "_id": "doc_5"
+    },
+    {
+      "natural_query": "查询评分最高的5个商品及其评分",
+      "sql": "SELECT p.name, AVG(r.rating) as avg_rating, COUNT(r.id) as review_count FROM products p JOIN reviews r ON p.id = r.product_id GROUP BY p.id HAVING COUNT(r.id) >= 3 ORDER BY avg_rating DESC LIMIT 5",
+      "tables": [
+        "products",
+        "reviews"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "group_by",
+        "having",
+        "avg",
+        "order_by",
+        "limit"
+      ],
+      "_id": "doc_6"
+    },
+    {
+      "natural_query": "查询2024年每月的销售额",
+      "sql": "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_amount) as monthly_sales FROM orders WHERE YEAR(created_at) = 2024 GROUP BY month ORDER BY month",
+      "tables": [
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "date_format",
+        "group_by",
+        "sum",
+        "where"
+      ],
+      "_id": "doc_7"
+    },
+    {
+      "natural_query": "查询购买了特定商品的所有用户",
+      "sql": "SELECT DISTINCT u.* FROM users u JOIN orders o ON u.id = o.user_id JOIN order_items oi ON o.id = oi.order_id WHERE oi.product_id = ?",
+      "tables": [
+        "users",
+        "orders",
+        "order_items"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "distinct",
+        "parameter"
+      ],
+      "_id": "doc_8"
+    },
+    {
+      "natural_query": "统计各状态的订单数量",
+      "sql": "SELECT status, COUNT(*) as order_count FROM orders GROUP BY status",
+      "tables": [
+        "orders"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "group_by",
+        "count"
+      ],
+      "_id": "doc_9"
+    },
+    {
+      "natural_query": "查询所有用户信息",
+      "sql": "SELECT * FROM users",
+      "tables": [
+        "users"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "basic"
+      ],
+      "_id": "doc_10"
+    },
+    {
+      "natural_query": "查询用户名为张三的用户",
+      "sql": "SELECT * FROM users WHERE username = '张三'",
+      "tables": [
+        "users"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "where",
+        "equality"
+      ],
+      "_id": "doc_11"
+    },
+    {
+      "natural_query": "查询价格大于100的商品",
+      "sql": "SELECT * FROM products WHERE price > 100",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "where",
+        "comparison"
+      ],
+      "_id": "doc_12"
+    },
+    {
+      "natural_query": "查询价格在50到200之间的商品",
+      "sql": "SELECT * FROM products WHERE price BETWEEN 50 AND 200",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "where",
+        "between"
+      ],
+      "_id": "doc_13"
+    },
+    {
+      "natural_query": "查询商品名称包含手机的商品",
+      "sql": "SELECT * FROM products WHERE name LIKE '%手机%'",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "where",
+        "like"
+      ],
+      "_id": "doc_14"
+    },
+    {
+      "natural_query": "查询所有商品按价格从高到低排序",
+      "sql": "SELECT * FROM products ORDER BY price DESC",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "order_by"
+      ],
+      "_id": "doc_15"
+    },
+    {
+      "natural_query": "查询前10个最贵的商品",
+      "sql": "SELECT * FROM products ORDER BY price DESC LIMIT 10",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "select",
+        "order_by",
+        "limit"
+      ],
+      "_id": "doc_16"
+    },
+    {
+      "natural_query": "统计商品总数",
+      "sql": "SELECT COUNT(*) as total_count FROM products",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "count",
+        "aggregate"
+      ],
+      "_id": "doc_17"
+    },
+    {
+      "natural_query": "统计每个分类的商品数量",
+      "sql": "SELECT category_id, COUNT(*) as product_count FROM products GROUP BY category_id",
+      "tables": [
+        "products"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "group_by",
+        "count"
+      ],
+      "_id": "doc_18"
+    },
+    {
+      "natural_query": "计算商品的平均价格",
+      "sql": "SELECT AVG(price) as avg_price FROM products",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "avg",
+        "aggregate"
+      ],
+      "_id": "doc_19"
+    },
+    {
+      "natural_query": "查询每个分类的平均价格",
+      "sql": "SELECT category_id, AVG(price) as avg_price FROM products GROUP BY category_id",
+      "tables": [
+        "products"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "group_by",
+        "avg"
+      ],
+      "_id": "doc_20"
+    },
+    {
+      "natural_query": "查询商品数量大于5的分类",
+      "sql": "SELECT category_id, COUNT(*) as cnt FROM products GROUP BY category_id HAVING cnt > 5",
+      "tables": [
+        "products"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "group_by",
+        "having",
+        "count"
+      ],
+      "_id": "doc_21"
+    },
+    {
+      "natural_query": "查询订单总金额最高的用户",
+      "sql": "SELECT user_id, SUM(total_amount) as total FROM orders GROUP BY user_id ORDER BY total DESC LIMIT 1",
+      "tables": [
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "group_by",
+        "sum",
+        "order_by",
+        "limit"
+      ],
+      "_id": "doc_22"
+    },
+    {
+      "natural_query": "查询商品及其分类名称",
+      "sql": "SELECT p.name as product_name, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id",
+      "tables": [
+        "products",
+        "categories"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "join",
+        "inner_join"
+      ],
+      "_id": "doc_23"
+    },
+    {
+      "natural_query": "查询用户及其订单信息",
+      "sql": "SELECT u.username, o.id as order_id, o.total_amount, o.created_at FROM users u JOIN orders o ON u.id = o.user_id",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "join",
+        "inner_join"
+      ],
+      "_id": "doc_24"
+    },
+    {
+      "natural_query": "查询所有分类及其商品数量，包括没有商品的分类",
+      "sql": "SELECT c.name, COUNT(p.id) as product_count FROM categories c LEFT JOIN products p ON c.id = p.category_id GROUP BY c.id",
+      "tables": [
+        "categories",
+        "products"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "left_join",
+        "group_by",
+        "count"
+      ],
+      "_id": "doc_25"
+    },
+    {
+      "natural_query": "查询订单详情包括用户名、商品名和数量",
+      "sql": "SELECT u.username, p.name as product_name, oi.quantity, oi.price FROM order_items oi JOIN orders o ON oi.order_id = o.id JOIN users u ON o.user_id = u.id JOIN products p ON oi.product_id = p.id",
+      "tables": [
+        "order_items",
+        "orders",
+        "users",
+        "products"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "multi_table"
+      ],
+      "_id": "doc_26"
+    },
+    {
+      "natural_query": "查询销量最高的10个商品",
+      "sql": "SELECT p.name, SUM(oi.quantity) as total_sold FROM products p JOIN order_items oi ON p.id = oi.product_id GROUP BY p.id ORDER BY total_sold DESC LIMIT 10",
+      "tables": [
+        "products",
+        "order_items"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "group_by",
+        "sum",
+        "order_by",
+        "limit"
+      ],
+      "_id": "doc_27"
+    },
+    {
+      "natural_query": "查询每个用户的订单总金额",
+      "sql": "SELECT u.username, SUM(o.total_amount) as total_spent FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY total_spent DESC",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "join",
+        "group_by",
+        "sum",
+        "order_by"
+      ],
+      "_id": "doc_28"
+    },
+    {
+      "natural_query": "查询没有下过订单的用户",
+      "sql": "SELECT * FROM users WHERE id NOT IN (SELECT DISTINCT user_id FROM orders)",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "subquery",
+        "not_in"
+      ],
+      "_id": "doc_29"
+    },
+    {
+      "natural_query": "查询购买过手机的用户",
+      "sql": "SELECT DISTINCT u.* FROM users u JOIN orders o ON u.id = o.user_id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id WHERE p.name LIKE '%手机%'",
+      "tables": [
+        "users",
+        "orders",
+        "order_items",
+        "products"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "multi_table",
+        "like",
+        "distinct"
+      ],
+      "_id": "doc_30"
+    },
+    {
+      "natural_query": "查询2024年每月的销售额",
+      "sql": "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_amount) as monthly_sales FROM orders WHERE YEAR(created_at) = 2024 GROUP BY month ORDER BY month",
+      "tables": [
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "date_format",
+        "group_by",
+        "sum",
+        "where"
+      ],
+      "_id": "doc_31"
+    },
+    {
+      "natural_query": "查询最近7天的订单",
+      "sql": "SELECT * FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC",
+      "tables": [
+        "orders"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "where",
+        "date",
+        "order_by"
+      ],
+      "_id": "doc_32"
+    },
+    {
+      "natural_query": "统计各状态的订单数量",
+      "sql": "SELECT status, COUNT(*) as order_count FROM orders GROUP BY status",
+      "tables": [
+        "orders"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "group_by",
+        "count"
+      ],
+      "_id": "doc_33"
+    },
+    {
+      "natural_query": "查询商品评分最高的前5个商品",
+      "sql": "SELECT p.name, AVG(r.rating) as avg_rating, COUNT(r.id) as review_count FROM products p JOIN reviews r ON p.id = r.product_id GROUP BY p.id HAVING COUNT(r.id) >= 3 ORDER BY avg_rating DESC LIMIT 5",
+      "tables": [
+        "products",
+        "reviews"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "group_by",
+        "having",
+        "avg",
+        "order_by",
+        "limit"
+      ],
+      "_id": "doc_34"
+    },
+    {
+      "natural_query": "查询库存不足10的商品",
+      "sql": "SELECT * FROM products WHERE stock < 10 ORDER BY stock ASC",
+      "tables": [
+        "products"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "where",
+        "comparison",
+        "order_by"
+      ],
+      "_id": "doc_35"
+    },
+    {
+      "natural_query": "查询各分类下价格最高的商品",
+      "sql": "SELECT p.* FROM products p INNER JOIN (SELECT category_id, MAX(price) as max_price FROM products GROUP BY category_id) pm ON p.category_id = pm.category_id AND p.price = pm.max_price",
+      "tables": [
+        "products"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "subquery",
+        "join",
+        "max",
+        "group_by"
+      ],
+      "_id": "doc_36"
+    },
+    {
+      "natural_query": "查询重复购买同一商品的用户",
+      "sql": "SELECT u.username, p.name, COUNT(*) as buy_count FROM users u JOIN orders o ON u.id = o.user_id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id GROUP BY u.id, p.id HAVING COUNT(*) > 1",
+      "tables": [
+        "users",
+        "orders",
+        "order_items",
+        "products"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "join",
+        "multi_table",
+        "group_by",
+        "having"
+      ],
+      "_id": "doc_37"
+    },
+    {
+      "natural_query": "查询消费金额超过平均值的用户",
+      "sql": "SELECT u.username, SUM(o.total_amount) as total FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id HAVING total > (SELECT AVG(total_amount) FROM orders)",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "subquery",
+        "join",
+        "group_by",
+        "having",
+        "avg"
+      ],
+      "_id": "doc_38"
+    },
+    {
+      "natural_query": "查询包含特定商品的订单",
+      "sql": "SELECT o.* FROM orders o WHERE EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id AND oi.product_id = 123)",
+      "tables": [
+        "orders",
+        "order_items"
+      ],
+      "complexity": "complex",
+      "tags": [
+        "subquery",
+        "exists"
+      ],
+      "_id": "doc_39"
+    }
+  ],
+  "id_map": {
+    "doc_0": 0,
+    "doc_1": 1,
+    "doc_2": 2,
+    "doc_3": 3,
+    "doc_4": 4,
+    "doc_5": 5,
+    "doc_6": 6,
+    "doc_7": 7,
+    "doc_8": 8,
+    "doc_9": 9,
+    "doc_10": 10,
+    "doc_11": 11,
+    "doc_12": 12,
+    "doc_13": 13,
+    "doc_14": 14,
+    "doc_15": 15,
+    "doc_16": 16,
+    "doc_17": 17,
+    "doc_18": 18,
+    "doc_19": 19,
+    "doc_20": 20,
+    "doc_21": 21,
+    "doc_22": 22,
+    "doc_23": 23,
+    "doc_24": 24,
+    "doc_25": 25,
+    "doc_26": 26,
+    "doc_27": 27,
+    "doc_28": 28,
+    "doc_29": 29,
+    "doc_30": 30,
+    "doc_31": 31,
+    "doc_32": 32,
+    "doc_33": 33,
+    "doc_34": 34,
+    "doc_35": 35,
+    "doc_36": 36,
+    "doc_37": 37,
+    "doc_38": 38,
+    "doc_39": 39
+  },
+  "dimension": 512
+}

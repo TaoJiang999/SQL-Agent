@@ -259,14 +259,23 @@ async def sql_executor_node(state: SQLAgentState) -> SQLAgentState:
 
 def should_retry(state: SQLAgentState) -> str:
     """Conditional routing: determine if retry is needed"""
+    from src.agents.workers.sql_generator import MAX_RETRY_COUNT
+    
     execution_error = state.get("execution_error")
     retry_count = state.get("retry_count", 0)
-    max_retries = state.get("max_retries", 3)
+    max_retries = state.get("max_retries", MAX_RETRY_COUNT)
     
+    print(f"[should_retry] error={bool(execution_error)}, retry_count={retry_count}/{max_retries}")
+    
+    # No error means success
     if not execution_error:
+        print("[should_retry] -> end (success)")
         return "end"
     
+    # Check if max retries exceeded
     if retry_count >= max_retries:
+        print(f"[should_retry] -> end (max retries {max_retries} reached)")
         return "end"
     
+    print(f"[should_retry] -> retry (attempt {retry_count + 1})")
     return "retry"

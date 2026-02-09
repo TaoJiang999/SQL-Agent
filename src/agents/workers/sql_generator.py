@@ -8,10 +8,14 @@ Responsibilities:
 """
 
 from typing import Any
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from src.config.llm import get_llm
 from src.agents.state import SQLAgentState
+
+
+# Configuration
+MAX_RETRY_COUNT = 3  # Maximum SQL fix attempts
 
 
 # Text-to-SQL prompt with RAG examples
@@ -109,9 +113,48 @@ async def sql_generator_node(state: SQLAgentState) -> SQLAgentState:
     existing_sql = state.get("generated_sql", "")
     execution_error = state.get("execution_error", "")
     retry_count = state.get("retry_count", 0)
+    max_retries = state.get("max_retries", MAX_RETRY_COUNT)
+    messages = state.get("messages", [])
+    
+    print(f"[sql_generator] intent={intent}, retry_count={retry_count}/{max_retries}, has_error={bool(execution_error)}")
     
     try:
-        if intent == "text_to_sql":
+        # If there's an execution error, go to debug/fix mode first
+        if execution_error and existing_sql:
+            # Check if we've exceeded max retries
+            if retry_count >= max_retries:
+                print(f"[sql_generator] Max retries ({max_retries}) reached, giving up")
+                error_msg = f"SQL generation failed after {retry_count} attempts. Last error: {execution_error}"
+                return {
+                    **state,
+                    "current_agent": "sql_generator",
+                    "error": error_msg,
+                    "messages": [
+                        *messages,
+                        AIMessage(content=f"抱歉，SQL生成失败。尝试了{retry_count}次仍未成功。\n\n**最后的错误:** {execution_error}")
+                    ]
+                }
+            
+            print(f"[sql_generator] Retry {retry_count + 1}/{max_retries}: Fixing SQL based on error")
+            
+            # Build context-aware fix prompt with error history
+            prompt = DEBUG_SQL_PROMPT.format(
+                schema=formatted_schema,
+                sql=existing_sql,
+                error=execution_error
+            )
+            response = await llm.ainvoke([HumanMessage(content=prompt)])
+            fixed_sql = clean_sql(response.content.strip())
+            
+            return {
+                **state,
+                "generated_sql": fixed_sql.strip(),
+                "execution_error": None,  # Clear error after fix
+                "retry_count": retry_count + 1,
+                "current_agent": "sql_generator",
+            }
+        
+        elif intent == "text_to_sql":
             # Get RAG examples
             rag_examples_text = await get_rag_examples(user_query, relevant_tables)
             
@@ -207,7 +250,29 @@ async def get_rag_examples(
     Returns:
         Formatted examples text for prompt
     """
+    import asyncio
+    
     try:
+        # Run RAG retrieval in a separate thread to avoid blocking
+        result = await asyncio.to_thread(
+            _sync_rag_retrieve,
+            query,
+            relevant_tables,
+            top_k
+        )
+        return result
+        
+    except Exception as e:
+        # RAG is optional, don't fail if unavailable
+        print(f"RAG retrieval failed: {e}")
+        return ""
+
+
+def _sync_rag_retrieve(query: str, relevant_tables: list[str], top_k: int) -> str:
+    """Synchronous wrapper for RAG retrieval"""
+    import asyncio
+    
+    async def _retrieve():
         from src.rag.sql_retriever import get_sql_retriever
         
         retriever = await get_sql_retriever()
@@ -225,11 +290,9 @@ async def get_rag_examples(
             return ""
         
         return retriever.format_for_prompt(examples)
-        
-    except Exception as e:
-        # RAG is optional, don't fail if unavailable
-        print(f"RAG retrieval failed: {e}")
-        return ""
+    
+    # Run in a new event loop in the thread
+    return asyncio.run(_retrieve())
 
 
 def clean_sql(sql: str) -> str:
