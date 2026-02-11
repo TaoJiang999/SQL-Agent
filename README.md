@@ -63,6 +63,14 @@
                                         结果输出    回到 SQL Generator
 ```
 
+### LangGraph 编排图
+
+下图为项目部署成功后，在 LangSmith 中生成的实际 Agent 编排图。清晰展示了 Intent Classifier 到各个 Worker 的路由逻辑，以及 RAG 和 Feedback loop 的工作流：
+
+<div align="center">
+  <img src="figs/graph.png" alt="LangSmith Graph" width="100%">
+</div>
+
 ---
 
 ## 📁 目录结构
@@ -316,33 +324,50 @@ langgraph dev --allow-blocking
 
 ---
 
-### 5️⃣ 使用演示
 
-以下是一些示例查询：
 
+## 🧪 启动原生 Qwen 基线 (可选)
+
+为了直观对比 Agent 的增强效果，本项目还提供了一个原生的 Qwen 模型 Agent（不包含 Schema 检索和 RAG 增强）。
+
+首先进入 `qwen_raw` 目录，然后使用 `langgraph` 启动：
+
+```bash
+cd qwen_raw
+cp .env.example .env
+langgraph dev
 ```
-💬 闲聊示例:
-  > 你好，你能做什么？
 
-📊 SQL 查询示例:
-  > 查询销量最高的10个商品
-  > 统计每个分类的商品数量
-  > 查询过去7天的订单总额
-  > 查询没有下过单的用户
-```
+---
 
-**Agent 处理流程：**
+## 📊 效果展示与对比
 
-```
-用户: "查询销量最高的10个商品"
-  │
-  ├─ 🎯 Intent Classifier  →  识别为 text_to_sql 意图
-  ├─ 🔍 Schema Retriever   →  定位 products, order_items 表
-  ├─ ⚡ SQL Generator       →  生成 SELECT ... ORDER BY ... LIMIT 10
-  ├─ 🛡️ SQL Executor        →  在安全沙箱中执行 SQL
-  │
-  └─ ✅ 返回查询结果 + SQL 解释
-```
+### ✅ SQL-Agent (增强版) 效果
+
+以下实测截图展示了 SQL-Agent 在实际场景中的表现。通过集成 **动态 Schema 检索** 和 **RAG (检索增强生成)**，Agent 显著提高了 SQL 生成的准确性。
+
+**1. 意图识别与任务分发**
+![Demo 1](figs/1.png)
+
+**2. 动态获取表结构信息**
+![Demo 2](figs/2.png)
+
+**3. 利用 RAG 检索历史相似 SQL**
+![Demo 3](figs/3.png)
+
+**4. 准确生成复杂查询**
+![Demo 4](figs/4.png)
+
+**5. 执行结果与自然语言反馈**
+![Demo 5](figs/5.png)
+
+### ❌ 原生 Qwen 的不足
+
+相比之下，直接使用原生模型 (qwen_raw) 往往存在以下问题：
+
+1.  **缺乏 Schema 感知**：原生模型不知道数据库中有哪些表和字段，不仅容易产生幻觉（编造表名），而且无法正确处理复杂的表关联。
+2.  **无 RAG 支持**：对于特定领域的查询逻辑（如特定的计算公式或业务规则），原生模型无法参考历史经验，导致生成逻辑错误。
+3.  **无闭环反馈**：当 SQL 执行出错时，原生模型无法获取报错信息进行自我修正。
 
 ---
 
