@@ -155,9 +155,9 @@ docker --version
 docker-compose --version
 ```
 
-#### 2.2 构建 Python 环境 (uv)
+#### 2.2 构建 Python 环境 (可选，仅用于本地开发)
 
-推荐使用 [uv](https://docs.astral.sh/uv/) 作为 Python 包管理器：
+如果希望在本地直接运行非 Docker 环境，可以使用 [uv](https://docs.astral.sh/uv/) 作为 Python 包管理器：
 
 ```bash
 # 安装 uv
@@ -177,20 +177,25 @@ uv pip install -e .
 uv pip install -e ".[dev]"
 ```
 
-#### 2.3 构建 MySQL 容器
+#### 2.3 启动服务 (MySQL + Agent)
 
-启动 Docker MySQL 沙箱（包含电商数据库 schema 和示例数据）：
+本项目使用 Docker Compose 编排 MySQL 沙箱和 Agent 服务。
+
+> **注意**: 如果使用 vLLM 本地部署，请确保宿主机已安装 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) 以支持 GPU 透传。
+
+启动 Docker 环境：
 
 ```bash
 cd docker
-docker-compose up -d
+# 构建并启动所有服务 (后台运行)
+docker-compose up -d --build
 cd ..
 ```
 
-验证容器运行状态：
+验证服务运行状态：
 ```bash
 docker ps
-# 应看到 sql-agent-sandbox 容器正在运行
+# 应看到 sql-agent-sandbox (MySQL) 和 sql-agent-main (Agent) 容器正在运行
 
 # 测试数据库连接
 docker exec -it sql-agent-sandbox mysql -usandbox_user -psandbox_password -e "SHOW DATABASES;"

@@ -4,7 +4,7 @@ services:
   mysql:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.mysql
     container_name: sql-agent-sandbox
     restart: unless-stopped
     ports:
@@ -31,6 +31,31 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: sql-agent-main
+    restart: unless-stopped
+    volumes:
+      - ../:/app
+      - ../.env:/app/.env
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    networks:
+      - sql-agent-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    tty: true
 
 volumes:
   mysql_data:

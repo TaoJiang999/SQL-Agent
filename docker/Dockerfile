@@ -1,26 +1,38 @@
-# ============================================
-# SQL Agent MySQL 沙盒数据库
-# ============================================
-FROM mysql:8.0
+FROM vllm/vllm-openai:latest
 
-# 设置环境变量
-ENV MYSQL_ROOT_PASSWORD=root_password
-ENV MYSQL_DATABASE=ecommerce
-ENV MYSQL_USER=sandbox_user
-ENV MYSQL_PASSWORD=sandbox_password
+# Install system utilities
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
 
-# 设置字符集
-ENV LANG=C.UTF-8
+# Set working directory
+WORKDIR /app
 
-# 配置MySQL
-COPY my.cnf /etc/mysql/conf.d/custom.cnf
+# Install Python dependencies
+# Using --no-cache-dir to keep image size down
+RUN pip install --no-cache-dir \
+    langchain>=0.3.0 \
+    langchain-core>=0.3.0 \
+    langchain-openai>=0.2.0 \
+    langchain-google-genai>=2.0.0 \
+    langgraph>=0.2.0 \
+    pydantic>=2.0.0 \
+    pydantic-settings>=2.0.0 \
+    python-dotenv>=1.0.0 \
+    aiomysql>=0.2.0 \
+    httpx>=0.27.0 \
+    faiss-cpu>=1.7.0 \
+    sentence-transformers>=2.2.0 \
+    numpy>=1.24.0
 
-# 复制初始化脚本
-COPY init/ /docker-entrypoint-initdb.d/
+# Copy project files
+COPY . .
 
-# 暴露端口
-EXPOSE 3306
+# Set environment variables
+ENV PYTHONPATH=/app/src
 
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD} || exit 1
+# Reset entrypoint to allow running specific commands (bash by default)
+ENTRYPOINT []
+CMD ["/bin/bash"]
