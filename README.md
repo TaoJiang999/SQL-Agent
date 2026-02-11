@@ -77,56 +77,50 @@
 
 ```
 SQL-Agent/
-├── main.py                        # 入口文件 (LangGraph Studio)
-├── langgraph.json                 # LangGraph 配置
-├── pyproject.toml                 # 项目依赖配置
-├── .env.example                   # 环境变量示例
-│
-├── src/                           # 源码目录
-│   ├── __init__.py
-│   ├── config/                    # 配置模块
-│   │   ├── settings.py            #   项目设置 (Pydantic Settings)
-│   │   └── llm.py                 #   LLM 统一初始化
-│   │
-│   ├── agents/                    # Agent 模块
-│   │   ├── state.py               #   状态定义 (AgentState / SQLAgentState)
-│   │   ├── base.py                #   Agent 基类
-│   │   ├── supervisor/            #   Supervisor Agent
-│   │   │   ├── agent.py           #     路由决策 & 结果汇总
-│   │   │   └── prompts.py         #     系统提示词
-│   │   └── workers/               #   Worker Agents
-│   │       ├── intent_classifier.py  # 🎯 意图识别器
-│   │       ├── schema_retriever.py   # 🔍 Schema 检索器
-│   │       ├── sql_generator.py      # ⚡ SQL 生成器
-│   │       ├── sql_executor.py       # 🛡️ SQL 执行器
-│   │       └── chat_handler.py       # 💬 闲聊处理器
-│   │
-│   ├── rag/                       # RAG 模块
-│   │   ├── data_loader.py         #   数据加载器
-│   │   ├── embeddings.py          #   Embedding 模型
-│   │   ├── vector_store.py        #   FAISS 向量存储
-│   │   ├── sql_retriever.py       #   SQL 示例检索器
-│   │   ├── sql_generator_auto.py  #   自动生成 SQL 示例
-│   │   └── feedback_loop.py       #   反馈循环
-│   │
-│   └── graph/                     # 工作流图
-│       └── workflow.py            #   LangGraph 流程定义
-│
-├── data/                          # 数据目录
-│   └── sql_examples/              #   SQL 示例数据
-│       ├── base_examples.json     #     基础示例集
-│       └── faiss_index/           #     FAISS 索引文件
-│
-├── docker/                        # Docker 配置
-│   ├── Dockerfile                 #   Agent 镜像构建 (基于 vLLM)
-│   ├── Dockerfile.mysql           #   MySQL 镜像构建
-│   ├── docker-compose.yml         #   容器编排
-│   ├── my.cnf                     #   MySQL 配置
-│   └── init/                      #   初始化 SQL 脚本
-│
-└── scripts/                       # 工具脚本
-    ├── init_rag.py                #   RAG 索引初始化
-    └── start_vllm.sh              #   vLLM 模型部署脚本
+├── .env.example
+├── README.md
+├── data/
+│   └── sql_examples/
+├── docker/
+│   ├── Dockerfile
+│   ├── Dockerfile.mysql
+│   ├── docker-compose.yml
+│   ├── init/
+│   └── my.cnf
+├── figs/
+├── langgraph.json
+├── main.py
+├── pyproject.toml
+├── qwen_raw/
+│   ├── .env.example
+│   ├── langgraph.json
+│   ├── pyproject.toml
+│   └── src/
+│       ├── graph.py
+│       ├── schema.py
+│       └── state.py
+├── scripts/
+│   ├── init_rag.py
+│   └── start_vllm.sh
+└── src/
+    ├── __init__.py
+    ├── agents/
+    │   ├── base.py
+    │   ├── state.py
+    │   ├── supervisor/
+    │   └── workers/
+    ├── config/
+    │   ├── llm.py
+    │   └── settings.py
+    ├── graph/
+    │   └── workflow.py
+    └── rag/
+        ├── data_loader.py
+        ├── embeddings.py
+        ├── feedback_loop.py
+        ├── sql_generator_auto.py
+        ├── sql_retriever.py
+        └── vector_store.py
 ```
 
 ---
@@ -346,19 +340,11 @@ langgraph dev
 
 以下实测截图展示了 SQL-Agent 在实际场景中的表现。通过集成 **动态 Schema 检索** 和 **RAG (检索增强生成)**，Agent 显著提高了 SQL 生成的准确性。
 
-**1. 意图识别与任务分发**
+
 ![Demo 1](figs/1.png)
-
-**2. 动态获取表结构信息**
 ![Demo 2](figs/2.png)
-
-**3. 利用 RAG 检索历史相似 SQL**
 ![Demo 3](figs/3.png)
-
-**4. 准确生成复杂查询**
 ![Demo 4](figs/4.png)
-
-**5. 执行结果与自然语言反馈**
 ![Demo 5](figs/5.png)
 
 ### ❌ 原生 Qwen 的不足
