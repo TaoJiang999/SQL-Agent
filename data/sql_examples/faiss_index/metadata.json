@@ -589,6 +589,92 @@
         "exists"
       ],
       "_id": "doc_39"
+    },
+    {
+      "natural_query": "查询销量最高的10个商品",
+      "sql": "SELECT p.name, SUM(oi.quantity) as total_sold \nFROM products p \nJOIN order_items oi ON p.id = oi.product_id \nGROUP BY p.id \nORDER BY total_sold DESC \nLIMIT 10",
+      "tables": [
+        "products",
+        "order_items"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "learned"
+      ],
+      "source": "feedback_loop",
+      "_id": "doc_40"
+    },
+    {
+      "natural_query": "统计每个分类的商品数量",
+      "sql": "SELECT c.name, COUNT(p.id) as product_count \nFROM categories c \nLEFT JOIN products p ON c.id = p.category_id \nGROUP BY c.id, c.name;",
+      "tables": [
+        "categories",
+        "products"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "learned"
+      ],
+      "source": "feedback_loop",
+      "_id": "doc_41"
+    },
+    {
+      "natural_query": "查询没有下过单的用户",
+      "sql": "SELECT * FROM users WHERE id NOT IN (SELECT DISTINCT user_id FROM orders)",
+      "tables": [
+        "users",
+        "orders"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "learned"
+      ],
+      "source": "feedback_loop",
+      "_id": "doc_42"
+    },
+    {
+      "natural_query": "请帮我统计每个一级分类下的商品销售总额（GMV），并按销售额从高到低排序，找出最赚钱的品类。”",
+      "sql": "SELECT c.name AS category_name, SUM(oi.total_amount) AS total_gmv\nFROM categories c\nJOIN products p ON c.id = p.category_id\nJOIN order_items oi ON p.id = oi.product_id\nWHERE c.parent_id IS NULL\nGROUP BY c.id\nORDER BY total_gmv DESC;",
+      "tables": [
+        "categories",
+        "products",
+        "order_items"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "learned"
+      ],
+      "source": "feedback_loop",
+      "_id": "doc_43"
+    },
+    {
+      "natural_query": "列出所有已发货超过 7 天但仍未签收的订单，显示订单号、快递公司、物流单号以及收货人电话，以便客服介入跟进。",
+      "sql": "SELECT o.order_no, s.carrier, s.tracking_no, o.receiver_phone\nFROM orders o\nJOIN shipments s ON o.id = s.order_id\nWHERE s.shipped_at <= DATE_SUB(NOW(), INTERVAL 7 DAY) AND o.receive_time IS NULL\nORDER BY s.shipped_at ASC",
+      "tables": [
+        "orders",
+        "shipments",
+        "users"
+      ],
+      "complexity": "simple",
+      "tags": [
+        "learned"
+      ],
+      "source": "feedback_loop",
+      "_id": "doc_44"
+    },
+    {
+      "natural_query": "查询那些虽然销量很高（超过 10 件），但用户评分较低（平均分低于1 分）的商品，我们需要排查质量问题。",
+      "sql": "SELECT p.name, p.sales, AVG(r.rating) as average_rating \nFROM products p \nLEFT JOIN reviews r ON p.id = r.product_id \nWHERE p.sales > 10 \nGROUP BY p.id \nHAVING average_rating < 1 \nORDER BY average_rating ASC;",
+      "tables": [
+        "products",
+        "reviews"
+      ],
+      "complexity": "medium",
+      "tags": [
+        "learned"
+      ],
+      "source": "feedback_loop",
+      "_id": "doc_45"
     }
   ],
   "id_map": {
@@ -631,7 +717,13 @@
     "doc_36": 36,
     "doc_37": 37,
     "doc_38": 38,
-    "doc_39": 39
+    "doc_39": 39,
+    "doc_40": 40,
+    "doc_41": 41,
+    "doc_42": 42,
+    "doc_43": 43,
+    "doc_44": 44,
+    "doc_45": 45
   },
   "dimension": 512
 }
