@@ -294,22 +294,25 @@ MODEL_API_KEY=not-needed             # 本地部署无需 API Key
 langgraph dev
 ```
 
-启动后访问 [http://localhost:8123](http://localhost:8123) 打开 LangGraph Studio 进行可视化调试。
+该命令会启动后端 API 服务。要使用可视化界面，有两种方式：
 
-#### 方式二：使用 Python 直接运行
+1. **自动跳转 (LangSmith)**:
+   启动命令后，浏览器会自动打开 LangSmith 控制台页面，连接本地服务进行调试。
 
-```python
-import asyncio
-from src.graph.workflow import run_sql_agent
+2. **本地部署 Chat UI**:
+   如果你想使用开源的 Chat UI 前端：
 
-async def main():
-    result = await run_sql_agent("查询销量最高的10个商品")
-    print(f"意图: {result['intent']}")
-    print(f"SQL:  {result['sql']}")
-    print(f"结果: {result['result']}")
-
-asyncio.run(main())
-```
+   ```bash
+   # 克隆前端项目
+   git clone https://github.com/langchain-ai/langgraph-studio.git
+   cd langgraph-studio
+   
+   # 安装依赖并启动 (需 Node.js)
+   npm install
+   npm start
+   ```
+   
+   启动后访问前端页面（通常是 `http://localhost:3000`），并在配置中指向你的 LangGraph 后端地址。
 
 ---
 
