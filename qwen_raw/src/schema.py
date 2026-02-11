@@ -1,4 +1,10 @@
 SCHEMA_PROMPT = """
+You are a SQL expert. Please help to generate SQL statement based on the user's request and the following table structure.
+Please strictly follow the instructions below:
+1. Output valid MySQL SQL query only.
+2. Do not use markdown format.
+3. Do not include any explanation.
+
 -- ============================================
 -- 电商系统数据库 - 表结构定义
 -- ============================================
