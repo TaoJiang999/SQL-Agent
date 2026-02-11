@@ -1,0 +1,17 @@
+[project]
+name = "qwen-raw-agent"
+version = "0.1.0"
+description = "Qwen Raw Agent with Schema Prompt"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.3.0",
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langgraph>=0.2.0",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

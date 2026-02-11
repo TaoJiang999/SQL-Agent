@@ -291,7 +291,7 @@ MODEL_API_KEY=not-needed             # 本地部署无需 API Key
 #### 方式一：使用 LangGraph Dev Server（推荐）
 
 ```bash
-langgraph dev
+langgraph dev --allow-blocking
 ```
 
 该命令会启动后端 API 服务。要使用可视化界面，有两种方式：

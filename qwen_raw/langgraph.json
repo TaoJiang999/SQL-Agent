@@ -1,0 +1,9 @@
+{
+    "dependencies": [
+        "."
+    ],
+    "graphs": {
+        "qwen_agent": "./src/graph.py:graph"
+    },
+    "env": ".env"
+}
