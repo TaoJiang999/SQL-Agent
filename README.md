@@ -110,7 +110,8 @@ SQL-Agent/
 │       └── faiss_index/           #     FAISS 索引文件
 │
 ├── docker/                        # Docker 配置
-│   ├── Dockerfile                 #   MySQL 镜像构建
+│   ├── Dockerfile                 #   Agent 镜像构建 (基于 vLLM)
+│   ├── Dockerfile.mysql           #   MySQL 镜像构建
 │   ├── docker-compose.yml         #   容器编排
 │   ├── my.cnf                     #   MySQL 配置
 │   └── init/                      #   初始化 SQL 脚本
@@ -179,15 +180,18 @@ uv pip install -e ".[dev]"
 
 #### 2.3 启动服务 (MySQL + Agent)
 
-本项目使用 Docker Compose 编排 MySQL 沙箱和 Agent 服务。
+本项目使用 Docker Compose 编排 MySQL 沙箱和 Agent 服务。Agent 容器基于 `vllm/vllm-openai` 官方镜像构建，**会自动拉取该镜像（约几 GB）**，请确保网络畅通。
 
-> **注意**: 如果使用 vLLM 本地部署，请确保宿主机已安装 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) 以支持 GPU 透传。
+> **注意**: 
+> 1. 如果使用 vLLM 本地部署，请确保宿主机已安装 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) 以支持 GPU 透传。
+> 2. `agent` 服务启动后默认为开发环境，代码挂载在 `/app`。
 
 启动 Docker 环境：
 
 ```bash
 cd docker
 # 构建并启动所有服务 (后台运行)
+# 这将自动拉取 vLLM 镜像并构建 Agent 环境
 docker-compose up -d --build
 cd ..
 ```
