@@ -304,12 +304,12 @@ langgraph dev
 
    ```bash
    # 克隆前端项目
-   git clone https://github.com/langchain-ai/langgraph-studio.git
-   cd langgraph-studio
+   git clone https://github.com/langchain-ai/agent-chat-ui.git
+   cd agent-chat-ui
    
-   # 安装依赖并启动 (需 Node.js)
-   npm install
-   npm start
+   # 安装依赖并启动（需要 Node.js）
+   pnpm install
+   pnpm dev
    ```
    
    启动后访问前端页面（通常是 `http://localhost:3000`），并在配置中指向你的 LangGraph 后端地址。
